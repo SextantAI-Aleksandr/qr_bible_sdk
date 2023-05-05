@@ -1,4 +1,5 @@
-use nexum::{postgres as nex_pg};
+// replace with pachydyrable use nexum::{postgres as nex_pg};
+use pachydurable::{connect::{Row}, autocomplete::{AutoComp, WhoWhatWhere}};
 use visibilis::{postgres as vis_pg};
 use magellan::{places::{City, Address}, parse::Place};
 
@@ -13,14 +14,14 @@ pub struct Congregation {
 }
 
 
-impl vis_pg::AutoComp<i32> for Congregation {
+impl AutoComp<i32> for Congregation {
     fn query_autocomp() ->  & 'static str {
         "SELECT cs.cong_id, cs.name, cs.street_str, cs.city
         FROM congregation_search cs
         WHERE ts @@ to_tsquery('simple', $1)
         LIMIT 15"
     }
-    fn rowfunc_autocomp(row: &nex_pg::Row) -> vis_pg::WhoWhatWhere<i32> {
+    fn rowfunc_autocomp(row: &Row) -> WhoWhatWhere<i32> {
         let pk: i32 = row.get(0);
         let mut name: String = row.get(1);
         let street_str: Option<String> = row.get(2);
@@ -31,6 +32,6 @@ impl vis_pg::AutoComp<i32> for Congregation {
            },
            _ => ()
         }
-        vis_pg::WhoWhatWhere{data_type: "congregation", pk, name}
+        WhoWhatWhere{data_type: "congregation", pk, name}
     }
 }
