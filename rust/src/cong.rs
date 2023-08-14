@@ -32,6 +32,6 @@ impl AutoComp<i32> for Congregation {
            },
            _ => ()
         }
-        WhoWhatWhere{data_type: "congregation", pk, name}
+        WhoWhatWhere{data_type: "congregation".to_string(), pk, name}
     }
 }
