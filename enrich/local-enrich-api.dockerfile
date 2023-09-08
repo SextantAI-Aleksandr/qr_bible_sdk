@@ -1,4 +1,4 @@
-FROM qrbible_enrich_loc_proto:1.3
+FROM qrbible_enrich_loc_proto:1.4
 
 # Set an environment variable for the working directory and set it so Docker operates from there
 ENV APP /app
