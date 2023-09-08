@@ -7,7 +7,7 @@ WORKDIR $APP
 
 # Copy the python app and the common_words file
 COPY common_words.txt .
-COPY closest_bible_book.py .
+COPY extract_bible_refs.py .
 COPY enrich_text.py .
 COPY local-run.py .
 

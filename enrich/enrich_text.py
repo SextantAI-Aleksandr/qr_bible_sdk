@@ -8,12 +8,13 @@ but has been problematic in python 3.10xx.
 """
 
 #~IMPORT~LIBRARIES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from typing import List, Optional
 import spacy        # for NLP
 from collections import namedtuple
 from random import choice
 from string import ascii_lowercase
 # Locally defined stuff
-from closest_bible_book import extract_bible_refs
+from extract_bible_refs import extract_bible_refs, speech_preprocess
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -156,7 +157,7 @@ def add_bible_ref_placeholders(text):
     # replace extra spaces but not newlines
     for _ in range(0,3):
         text = text.replace('  ',' ')
-    refs = extract_bible_refs(text)
+    _preprocessed, refs = extract_bible_refs(text)
     text = replace_multiword_books(text, refs)
     #print(refs)
     replacements = []
@@ -234,7 +235,7 @@ def sub_bible_placeholders(text, placeholders):
 
 
 #~~~COMBINED~BIBLE~&~NAMED~ENTITY~RECOGNITION~~~~~~~~~~~~
-def enrich(text):
+def _enrich(text):
     # look for bible passages and named entities in text and enrich it
     # The first part of the output is JSON-serializable for http.
     # the second part (list of EntTup namedtuples ) is for internal use
@@ -242,6 +243,20 @@ def enrich(text):
     text, entities, ents_as_dicts = add_entities(text)
     text = sub_bible_placeholders(text, placeholders)
     return {'html':text, 'named_bible_refs':named_bible_refs, 'entities':ents_as_dicts}, entities
+
+
+def enrich(text, preprocess: Optional[bool]=False):
+    ''' This function differs from _enrich in that it allows the optional preprocess keyword for use when 
+        processing speech transcripts like "I read second samuel five three through six"
+    '''
+    if preprocess:
+        # use the preprocessed text for everything so the HTML subsititutions 'fit'
+        text = speech_preprocess(text)
+    d, entities = _enrich(text)
+    if preprocess:
+        # show what the preprocessed text was 
+        d['preprocessed'] = text 
+    return d, entities 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -250,8 +265,8 @@ def test_enrich_simple():
     # perform enrichment on a simple passage and and test the results
     text = 'Let\'s visit Coffee Shop Bleu and study Exodus 22.'
     data, _ = enrich(text)
-    assert data['html'] == 'Let\'s visit <a href=\'javascript:void\' onclick=\'clickNamedEnt("coffee_shop_bleu")\'> Coffee Shop Bleu </a> and study <a href=\'javascript:void\' onclick=\'clickPassage("bible", "Exodus", "22", 1, "22", 31, "Exodus 22")\'> Exodus 22 </a>.'
-    assert data['named_bible_refs'] == [['Exodus', 22, 1, 22, 31, 'Exodus 22']]
+    assert data['html'] == 'Let\'s visit <a href=\'javascript:void\' onclick=\'clickNamedEnt("coffee_shop_bleu")\'> Coffee Shop Bleu </a> and study <a href=\'javascript:void\' onclick=\'clickPassage("bible", "Exodus", "22", None, "22", None, "Exodus 22")\'> Exodus 22 </a>.'
+    assert data['named_bible_refs'] == [['Exodus', 22, None, 22, None, 'Exodus 22']]
     assert data['entities'] == [{'key':'coffee_shop_bleu', 'pos':'ORG', 'name':'Coffee Shop Bleu'}]
 
 
@@ -263,11 +278,11 @@ def test_multichapter_bible_refs():
     assert ans[0] == expected_sub
     assert ans[1] == {
         'xref_bible_0001': ['Exodus', 12, 3, 14, 8, 'Exodus 12:3 - 14:8)', 'Exodus 12:3 - 14:8'],
-        'xref_bible_0002': ['Galatians', 3, 1, 3, 29, '(Galatians 3)', 'Galatians 3'],
+        'xref_bible_0002': ['Galatians', 3, None, 3, None, '(Galatians 3)', 'Galatians 3'],
         'xref_bible_0003': ['Revelation', 22, 4, 22, 5, 'Rev. 22: 4-5', 'Revelation 22:4-5']}
     assert ans[2] == [
         ['Exodus', 12, 3, 14, 8, 'Exodus 12:3 - 14:8'],
-        ['Galatians', 3, 1, 3, 29, 'Galatians 3'],
+        ['Galatians', 3, None, 3, None, 'Galatians 3'],
         ['Revelation', 22, 4, 22, 5, 'Revelation 22:4-5']]
 
 
@@ -284,7 +299,14 @@ def test_multiword_refs():
     resp = add_bible_ref_placeholders('today I read 1 John 2- it is my favorite')
     assert resp == (
         'today I read xref_bible_0001 it is my favorite',
-        {'xref_bible_0001': ['1 John', 2, 1, 2, 29, '1_John 2-', '1 John 2-']},
-        [['1 John', 2, 1, 2, 29, '1 John 2-']]
+        {'xref_bible_0001': ['1 John', 2, None, 2, None, '1_John 2-', '1 John 2-']},
+        [['1 John', 2, None, 2, None, '1 John 2-']]
     )
+
+def test_preprocess_1():
+    # quick sanity check that speech preprocessing works
+    d, _entities = enrich('I was reading second chronicles in chapter twenty nine verses eight thru thirty two.', preprocess=True)
+    assert d['named_bible_refs'] ==  [['2 Chronicles', 29, 8, 29, 32, '2 Chronicles 29']]
+    d, _entities = enrich('I was reading exodus two thru three', preprocess=True)
+    assert d['named_bible_refs'] ==  [['Exodus', 2, None, 3, None, 'Exodus 2 - 3']]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
