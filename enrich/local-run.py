@@ -57,8 +57,9 @@ def enrich_api():
     # give the document vectors for an array of documents
     req_id = request.json.get('req_id', None)
     text = request.json.get('text', '')
+    preprocess = request.json.get('preprocess', False)
     print('    req_id={} text={}...'.format(req_id, text[:40]))
-    resp, _ = enrich_text.enrich(text)
+    resp, _ = enrich_text.enrich(text, preprocess=preprocess)
     resp['req_id'] = req_id
     return resp
 
