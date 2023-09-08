@@ -122,7 +122,10 @@ def speech_preprocess(text: str) -> str:
     words = _sub_pre_numeric_words(words)
     words = _sub_pre_numeric_words(words) # sub again so 'in verse 2' becomes '2'
     words = _sub_pre_numeric_words(words) # sub again so 'starting in verse 2' becomes '2'
-    return ' '.join(words)
+    # The extra spaces around ':' and '-' were neede for word splitting, but they
+    # mess with HTML substitution and looks funky
+    preprocessed_text = ' '.join(words).replace(' : ',':').replace(' - ','-') 
+    return preprocessed_text
 
 
 def _extract_bible_refs(text: str) -> List[Tuple[object]]:
@@ -187,13 +190,13 @@ def test_speech_preprocess():
     # ensure you can perform substitutions to replace speech transcripts with text
     # more easily recongizable by the scriptures module 
     # some of these examples were taken from actual YouTube video transcripts 
-    assert speech_preprocess('I read Psalm one eighteen starting in verse eight thru  twelve') == 'I read psalm 118 : 8 - 12'
+    assert speech_preprocess('I read Psalm one eighteen starting in verse eight thru  twelve') == 'I read psalm 118:8-12'
     assert speech_preprocess(' if you go back to Genesis chapter 4 to') == 'if you go back to Genesis 4 to'
-    assert speech_preprocess('things Isaiah 51 verse 1 and 2 listen') == 'things Isaiah 51 : 1 - 2 listen'
+    assert speech_preprocess('things Isaiah 51 verse 1 and 2 listen') == 'things Isaiah 51:1-2 listen'
 
 def test_extract_1():
     x1 = extract_bible_refs('Yesterday I read Psalm one eleven five to eight slowly', preprocess=True, nullify=True)
-    assert x1 == ('Yesterday I read psalm 111 : 5 - 8 slowly', [('Psalms', 111, 5, 111, 8, 'Psalms')])
+    assert x1 == ('Yesterday I read psalm 111:5-8 slowly', [('Psalms', 111, 5, 111, 8, 'Psalms')])
     x2 = extract_bible_refs('Yesterday I read Psalm one eleven quickly', preprocess=True, nullify=True)
     assert x2 == ('Yesterday I read psalm 111 quickly', [('Psalms', 111, None, 111, None, 'Psalms')])
 
@@ -203,7 +206,7 @@ def test_exract_2():
     x2 = extract_bible_refs('Today Samuel read Second samuel chapter five.', preprocess=True, nullify=True)
     assert x2 == ('Today Samuel read 2 samuel 5.', [('2 Samuel', 5, None, 5, None, '2_Samuel')])
     x3 = extract_bible_refs('Today Samuel read Second samuel five  eight thru twenty one.', preprocess=True, nullify=True)
-    assert x3 == ('Today Samuel read 2 samuel 5 : 8 - 21.', [('2 Samuel', 5, 8, 5, 21, '2_Samuel')])
+    assert x3 == ('Today Samuel read 2 samuel 5:8-21.', [('2 Samuel', 5, 8, 5, 21, '2_Samuel')])
     x4 = extract_bible_refs('Today Samuel read Second samuel chapter five  eight thru twenty one.', preprocess=True, nullify=True)
-    assert x4 == ('Today Samuel read 2 samuel 5 : 8 - 21.', [('2 Samuel', 5, 8, 5, 21, '2_Samuel')])
+    assert x4 == ('Today Samuel read 2 samuel 5:8-21.', [('2 Samuel', 5, 8, 5, 21, '2_Samuel')])
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

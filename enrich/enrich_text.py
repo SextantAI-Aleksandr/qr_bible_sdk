@@ -306,7 +306,7 @@ def test_multiword_refs():
 def test_preprocess_1():
     # quick sanity check that speech preprocessing works
     d, _entities = enrich('I was reading second chronicles in chapter twenty nine verses eight thru thirty two.', preprocess=True)
-    assert d['named_bible_refs'] ==  [['2 Chronicles', 29, 8, 29, 32, '2 Chronicles 29']]
+    assert d['named_bible_refs'] ==  [['2 Chronicles', 29, 8, 29, 32, '2 Chronicles 29:8-32']]
     d, _entities = enrich('I was reading exodus two thru three', preprocess=True)
-    assert d['named_bible_refs'] ==  [['Exodus', 2, None, 3, None, 'Exodus 2 - 3']]
+    assert d['named_bible_refs'] ==  [['Exodus', 2, None, 3, None, 'Exodus 2-3']]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
