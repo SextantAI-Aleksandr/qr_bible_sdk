@@ -6,13 +6,13 @@ RUN mkdir $APP
 WORKDIR $APP
 
 # Copy the python app and the common_words file
-COPY common_words.txt .
-COPY extract_bible_refs.py .
-COPY enrich_text.py .
-COPY local-run.py .
+#COPY common_words.txt .
+#COPY extract_bible_refs.py .
+#COPY enrich_text.py .
+#COPY local-run.py .
 
 # Install postgres because you will need it for populating congregations, torah portions
-RUN pip3 install psycopg2-binary==2.9.3
+#RUN pip3 install psycopg2-binary==2.9.3 # moved to local-run.pip
 
 # Expose the port uWSGI will listen on
 EXPOSE 5000

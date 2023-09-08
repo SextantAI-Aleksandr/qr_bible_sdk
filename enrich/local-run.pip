@@ -9,6 +9,7 @@ flask-cors==3.0.10
 python-scriptures==3.0.0
 number-parser==0.3.2
 pytest==7.1.2
+psycopg2-binary==2.9.3
 # python3 -m spacy download en_core_web_sm
 
 
