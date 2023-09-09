@@ -142,7 +142,13 @@ def nullify_unspecified_verses(ref):
     else:
         test_text = '{} {} - {}'.format(book, start_chap, end_chap) # i.e. 'Exodus 2 - 3'
     # try parsing the reference again without reference to verses 
-    test_ref = _extract_bible_refs(test_text)[0]
+    try:
+        test_ref = _extract_bible_refs(test_text)[0]
+    except IndexError:
+        # this typically means an error occured where trying to extract the reference again failed
+        # don't crash, whimper and don't nullify
+        print('WARN: extract_bible_refs.py::nullify_unspecified_verses failed to parse "{}"'.format(test_text))
+        return ref
     _, _, test_start_verse, _, test_end_verse, _ = test_ref 
     if (start_verse == test_start_verse) and (end_verse == test_end_verse):
         start_verse, end_verse = None, None 
