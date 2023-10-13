@@ -69,6 +69,7 @@ pub struct Book {
 /// so it can be read/viewed. This may come up often in the context of searching
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Verse {
+    pub name: String,       // i.e. "Genesis 22:2" etc.
     pub book: Book,
     pub translation: Translation,
     pub chap_no: String,
@@ -96,6 +97,9 @@ impl<'a> tokio_postgres::types::FromSql<'a> for Verse {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Chapter {
     pub name: String,       // i.e. "Genesis 22" etc.
+    pub book: Book,
+    pub translation: Translation,
+    pub chap_no: String,
     pub ct_ref_verse: i32,  // count of inbound references from verses mentioning 1+ verses in this chapter
     pub ct_ref_npara: i32,  // count of inbound references from note paragraphs mentioning 1+ verses in this chapter
     pub ct_ref_vpara: i32,  // count of inbound references from videos mentioning 1+ verses in this chapter
@@ -146,6 +150,25 @@ impl Cacheable for Verse {
     }
 }
 
+
+impl Cacheable for Chapter {
+    fn query() ->  &'static str {
+        "SELECT chapter FROM chapter_struct WHERE book = $1 AND chapter_no = $2 AND trans_id = $3"
+    }
+
+    fn from_row(row: &Row) -> Self {
+        let chapter: Chapter = row.get(0);
+        chapter
+    }
+
+    fn key_prefix() ->  &'static str {
+        "chapter"
+    }
+
+    fn seconds_expiry() -> usize {
+        86_400usize // one day
+    }
+}
 
 #[derive(Debug)]
 pub struct CorpusError {
