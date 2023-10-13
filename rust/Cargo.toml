@@ -10,6 +10,8 @@ assert_matches = "1.5.0"
 qrcodegen = "1.8.0"
 serde = { version="1.0.147", features = ["derive"] }
 serde_json = "1.0.81"
+tokio-postgres = "0.7.5"
+postgres = { version = "0.19.5", features = ["with-chrono-0_4"] }
 # local crates
 pachydurable = { path = "../../../Aleksandr/pachydurable" }
 visibilis = { path = "../../../Aleksandr/visibilis" }
