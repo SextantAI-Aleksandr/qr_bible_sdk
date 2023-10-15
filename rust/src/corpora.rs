@@ -72,7 +72,7 @@ pub struct Verse {
     pub name: String,       // i.e. "Genesis 22:2" etc.
     pub book: Book,
     pub translation: Translation,
-    pub chap_no: String,
+    pub chapter_no: String,
     pub verse_no: i16,
     pub text: String,
     pub html: String,
@@ -99,7 +99,7 @@ pub struct Chapter {
     pub name: String,       // i.e. "Genesis 22" etc.
     pub book: Book,
     pub translation: Translation,
-    pub chap_no: String,
+    pub chapter_no: String,
     pub ct_ref_verse: i32,  // count of inbound references from verses mentioning 1+ verses in this chapter
     pub ct_ref_npara: i32,  // count of inbound references from note paragraphs mentioning 1+ verses in this chapter
     pub ct_ref_vpara: i32,  // count of inbound references from videos mentioning 1+ verses in this chapter
