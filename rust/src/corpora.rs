@@ -131,7 +131,7 @@ pub struct TorahPortion {
     /// the location of the portion, i.e. 'Exodus 1:1 - 5:10' etc. 
     pub location: String, // i.e. Exodus 1:1 - 5:10 or whatever
     /// A vec of chapter structs, where some chapters may not contain the full set of verses 
-    pub torah: Vec<Chapter>,
+    pub chapters: Vec<Chapter>,
 }
 
 
