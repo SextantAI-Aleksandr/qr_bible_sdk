@@ -121,13 +121,29 @@ impl<'a> tokio_postgres::types::FromSql<'a> for Chapter {
 
 /// A TorahPortion is similar to a passage, but it conains multiple chapters
 /// Note that some chapters may be "cut short" depending on where the passage starts & stops
-#[derive(Serialize, Debug)]
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct TorahPortion {
-    pub name: String,   // the name of the Torah Portion
+    /// The id for this torah portion 
+    pub portion_id: i16, 
+    /// The name of the Torah Portion, i.e. 'Shemot' or 'Haazinu'
+    pub name: String,
+    /// the location of the portion, i.e. 'Exodus 1:1 - 5:10' etc. 
     pub location: String, // i.e. Exodus 1:1 - 5:10 or whatever
-    pub torah: Vec<Chapter>,     // partial chapters are okay
+    /// A vec of chapter structs, where some chapters may not contain the full set of verses 
+    pub torah: Vec<Chapter>,
 }
 
+
+impl<'a> tokio_postgres::types::FromSql<'a> for TorahPortion {
+    fn from_sql(_ty: &tokio_postgres::types::Type, raw: &'a [u8]) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+        let torah_portion: TorahPortion = serde_json::from_slice(raw)?;
+        Ok(torah_portion)
+    }
+    fn accepts(_ty: &tokio_postgres::types::Type) -> bool {
+        true
+    }
+}
 
 
 
@@ -169,6 +185,28 @@ impl Cacheable for Chapter {
         86_400usize // one day
     }
 }
+
+
+impl Cacheable for TorahPortion {
+    fn query() ->  &'static str {
+        "SELECT torah_portion FROM torah_portion_struct WHERE portion_id = $1 AND trans_id = $2"
+    }
+
+    fn from_row(row: &Row) -> Self {
+        let torah_portion: TorahPortion = row.get(0);
+        torah_portion 
+    }
+  
+    fn key_prefix() ->  &'static str {
+        "torah_portion"
+    }
+  
+    fn seconds_expiry() -> usize {
+        86_400usize // one day
+    }
+}
+
+
 
 #[derive(Debug)]
 pub struct CorpusError {
