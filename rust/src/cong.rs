@@ -1,7 +1,7 @@
 // replace with pachydyrable use nexum::{postgres as nex_pg};
 use pachydurable::{connect::{Row}, autocomplete::{AutoComp, WhoWhatWhere}};
-use visibilis::{postgres as vis_pg};
-use magellan::{places::{City, Address}, parse::Place};
+
+use magellan::{places::{Address}};
 
 
 /// This struct represents a church, synagogue, etc. 

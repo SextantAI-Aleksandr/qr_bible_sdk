@@ -3,7 +3,7 @@ use std::fmt;
 use serde::{Serialize, Deserialize};
 use tokio_postgres::{Row};
 
-use pachydurable::{err::{DiskError}, connect::ClientNoTLS,  redis::Cacheable};
+use pachydurable::{redis::Cacheable};
 
 
 /// There are only a few copora so they can be enumerated
