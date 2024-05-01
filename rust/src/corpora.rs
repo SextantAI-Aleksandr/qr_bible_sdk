@@ -71,7 +71,7 @@ pub struct Book {
 pub struct Verse {
     pub name: String,       // i.e. "Genesis 22:2" etc.
     pub book: Book,
-    pub translation: Translation,
+    pub translation: String,
     pub chapter_no: String,
     pub verse_no: i16,
     pub text: String,
@@ -98,7 +98,7 @@ impl<'a> tokio_postgres::types::FromSql<'a> for Verse {
 pub struct Chapter {
     pub name: String,       // i.e. "Genesis 22" etc.
     pub book: Book,
-    pub translation: Translation,
+    pub translation: String,
     pub chapter_no: String,
     pub ct_ref_verse: i32,  // count of inbound references from verses mentioning 1+ verses in this chapter
     pub ct_ref_npara: i32,  // count of inbound references from note paragraphs mentioning 1+ verses in this chapter
