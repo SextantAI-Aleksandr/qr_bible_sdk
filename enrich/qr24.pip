@@ -1,0 +1,6 @@
+# Updated to use flacy_base:1.0
+python-Levenshtein==0.12.2
+fuzzywuzzy==0.18.0
+python-scriptures==3.0.0
+number-parser==0.3.2
+
