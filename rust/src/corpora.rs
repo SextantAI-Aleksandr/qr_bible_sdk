@@ -65,6 +65,28 @@ pub struct Book {
     pub name: String,
 }
 
+/// This struct counts cross-references, both explicit and based on topic (semantic) similarity 
+/// for ONE source
+#[derive(Serialize, Deserialize, Debug)]
+pub struct XrefSrcCt {
+    /// count of "eXplicit References" - where a passage is named
+    pub xpl_ref: i32,
+    /// count of "Similar Topics" - where semantic similarity is high 
+    pub sim_top: i32,
+}
+
+/// this struct summarizes Cross-References by source 
+#[derive(Serialize, Deserialize, Debug)] 
+pub struct XrefCt {
+    /// references from other passages (bible, talmud, etc.)
+    pub passages: XrefSrcCt,
+    /// references from notes
+    pub notes: XrefSrcCt,
+    /// references from youtube videos
+    pub videos: XrefSrcCt,
+}
+
+
 /// The Verse struct (separate from the VerseText) struct is intended to send all the information about one verse
 /// so it can be read/viewed. This may come up often in the context of searching
 #[derive(Serialize, Deserialize, Debug)]
@@ -76,9 +98,8 @@ pub struct Verse {
     pub verse_no: i16,
     pub text: String,
     pub html: String,
-    pub ct_ref_verse: i32,  // count of inbound references from verses mentioning this verse
-    pub ct_ref_npara: i32,  // count of inbound references from note paragraphs mentioning this verse
-    pub ct_ref_vpara: i32,  // count of inbound references from videos mentioning this verse
+    /// count of cross-references by source
+    pub xref_ct: XrefCt
 }
 
 
