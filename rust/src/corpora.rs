@@ -121,9 +121,8 @@ pub struct Chapter {
     pub book: Book,
     pub translation: String,
     pub chapter_no: String,
-    pub ct_ref_verse: i32,  // count of inbound references from verses mentioning 1+ verses in this chapter
-    pub ct_ref_npara: i32,  // count of inbound references from note paragraphs mentioning 1+ verses in this chapter
-    pub ct_ref_vpara: i32,  // count of inbound references from videos mentioning 1+ verses in this chapter
+    /// count of cross-references by source
+    pub xref_ct: XrefCt,
     pub verses: Vec<Verse>,
 }
 
