@@ -1,9 +1,14 @@
+//! This module contains core structs such as Verses and Chapters associated with corproa.
+//! By factoring out these structs from the backend service creating them,
+//! Users can create clients that are prepared to deserialize those same structs for 
+//! ther own application. 
+
+
 use std::error::Error;
 use std::fmt;  
 use serde::{Serialize, Deserialize};
-use tokio_postgres::{Row};
-
-use pachydurable::{redis::Cacheable};
+use tokio_postgres::Row;
+use pachydurable::redis::Cacheable;
 
 
 /// There are only a few copora so they can be enumerated
@@ -17,14 +22,6 @@ pub enum Corpus {
 
 
 impl Corpus {
-    pub fn default_translation(&self) -> (i16, Translation) {
-        match *self {
-            Corpus::Bible => (1i16, Translation::Lexham),
-            Corpus::Talmud => (2i16, Translation::EnglishSefaria),
-            Corpus::Josephus => (-99i16, Translation::EnglishSefaria), // trans_id TBD
-            Corpus::Enoch => (-99i16, Translation::EnglishEnoch), // trans_id TBD
-        }
-    }
     pub fn from_name(corpus_name: &str) -> Result<Self, CorpusError> {
         match corpus_name.to_lowercase().as_ref() {
             "bible" => Ok(Corpus::Bible),
@@ -35,27 +32,6 @@ impl Corpus {
         }
     }
 }
-
-/// There are only a few translations so they can be enumerated
-#[derive(Serialize, Deserialize, Debug)]
-pub enum Translation {
-    KingJamesVersion,
-    Lexham,
-    Hebrew,
-    EnglishSefaria,
-    EnglishEnoch,
-}
-/*impl Translation {
-    pub fn from_name(trans_name: &str) -> Result<Self, CorpusError> {
-        match trans_name.to_lowercase().as_ref() {
-            "king james" => Ok(Translation::KingJames),
-            "lexham" => Ok(Translation::Lexham),
-            "hebrew" => Ok(Translation::Hebrew),
-            "english" => Ok(Translation::English),
-            _ => Err(CorpusError{msg: format!("unable to decipher translation '{}'", trans_name)}),
-        }
-    }
-}*/
 
 /// A Book (i.e. Genesis, Bava Batra, etc.) has a corpus, a unique book_id, and a name
 #[derive(Serialize, Deserialize, Debug)]
@@ -150,7 +126,7 @@ pub struct TorahPortion {
     pub name: String,
     /// the location of the portion, i.e. 'Exodus 1:1 - 5:10' etc. 
     pub location: String, // i.e. Exodus 1:1 - 5:10 or whatever
-    /// A vec of chapter structs, where some chapters may not contain the full set of verses 
+    /// A vec of chapter structs, where some chapters may not contain the full set of verses
     pub chapters: Vec<Chapter>,
 }
 
