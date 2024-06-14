@@ -18,6 +18,7 @@ pub enum Corpus {
     Talmud,
     Josephus,
     Enoch,
+    Apocrypha
 }
 
 
@@ -28,6 +29,7 @@ impl Corpus {
             "talmud" => Ok(Corpus::Talmud),
             "josephus" => Ok(Corpus::Josephus),
             "enoch" => Ok(Corpus::Enoch),
+            "apocrypha" => Ok(Corpus::Apocrypha), 
             _ => Err(CorpusError{msg: format!("unable to decipher corpus '{}'", corpus_name)}),
         }
     }
