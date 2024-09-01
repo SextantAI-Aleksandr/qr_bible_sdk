@@ -4,8 +4,7 @@
 //! ther own application. 
 
 
-use std::error::Error;
-use std::fmt;  
+use std::{error::Error, fmt, vec::Vec};
 use serde::{Serialize, Deserialize};
 use tokio_postgres::Row;
 use pachydurable::redis::Cacheable;
@@ -33,6 +32,32 @@ impl Corpus {
             _ => Err(CorpusError{msg: format!("unable to decipher corpus '{}'", corpus_name)}),
         }
     }
+}
+
+
+/// The translation struct captures that there will often be more than one translation for a given passage
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Translation {
+    /// a unique ID for this translation
+    pub trans_id: i16,
+    /// the name of this translation, 
+    pub translation: String,
+}
+
+/// The TransData struct captures both the selected translation as well as the available translations for a passage
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TransData {
+    pub selected: Translation,
+    pub available: Vec<Translation>
+}
+
+/// The Passage generic allows you to remove translation data from chater and verse structs
+/// This is useful since the Chapter struct contains the Verse struct, but providing TransData
+/// along with each and every verse is very inefficient
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Passage<T> {
+    pub pass: T,
+    pub translations: TransData,
 }
 
 /// A Book (i.e. Genesis, Bava Batra, etc.) has a corpus, a unique book_id, and a name
@@ -71,7 +96,6 @@ pub struct XrefCt {
 pub struct Verse {
     pub name: String,       // i.e. "Genesis 22:2" etc.
     pub book: Book,
-    pub translation: String,
     pub chapter_no: String,
     pub verse_no: i16,
     pub text: String,
@@ -97,7 +121,6 @@ impl<'a> tokio_postgres::types::FromSql<'a> for Verse {
 pub struct Chapter {
     pub name: String,       // i.e. "Genesis 22" etc.
     pub book: Book,
-    pub translation: String,
     pub chapter_no: String,
     /// count of cross-references by source
     pub xref_ct: XrefCt,
@@ -143,16 +166,35 @@ impl<'a> tokio_postgres::types::FromSql<'a> for TorahPortion {
     }
 }
 
+impl<'a> tokio_postgres::types::FromSql<'a> for Translation {
+    fn from_sql(_ty: &tokio_postgres::types::Type, raw: &'a [u8]) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+        let trans: Translation = serde_json::from_slice(raw)?;
+        Ok(trans)
+    }
+    fn accepts(_ty: &tokio_postgres::types::Type) -> bool {
+        true
+    }
+}
 
 
-impl Cacheable for Verse {
+
+
+impl Cacheable for Passage<Verse> {
     fn query() ->  &'static str {
-        "SELECT verse FROM verse_struct WHERE book = $1 AND chapter_no = $2 AND verse_no = $3 AND trans_id = $4"
+        "SELECT vs.verse, t.trans_id, t.translation, available_trans
+        FROM verse_struct vs 
+        INNER JOIN translations t ON vs.trans_id = t.trans_id 
+        INNER JOIN translations_jz tjz ON vs.book_id = tjz.book_id 
+        WHERE vs.book = $1 AND vs.chapter_no = $2 AND vs.verse_no = $3 AND vs.trans_id = $4"
     }
 
     fn from_row(row: &Row) -> Self {
         let verse: Verse = row.get(0);
-        verse
+        let trans_id: i16 = row.get(1);
+        let translation: String = row.get(2);
+        let selected = Translation{trans_id, translation};
+        let available: Vec<Translation> = row.get(3);
+        Passage{pass: verse, translations: TransData{selected, available}}
     }
 
     fn key_prefix() ->  &'static str {
@@ -165,14 +207,22 @@ impl Cacheable for Verse {
 }
 
 
-impl Cacheable for Chapter {
+impl Cacheable for Passage<Chapter> {
     fn query() ->  &'static str {
-        "SELECT chapter FROM chapter_struct WHERE book = $1 AND chapter_no = $2 AND trans_id = $3"
+        "SELECT ch.chapter, t.trans_id, t.translation, available_trans
+        FROM chapter_struct ch 
+        INNER JOIN translations t ON ch.trans_id = t.trans_id 
+        INNER JOIN translations_jz tjz ON ch.book_id = tjz.book_id 
+        WHERE ch.book = $1 AND ch.chapter_no = $2 AND ch.trans_id = $3 "
     }
 
     fn from_row(row: &Row) -> Self {
         let chapter: Chapter = row.get(0);
-        chapter
+        let trans_id: i16 = row.get(1);
+        let translation: String = row.get(2);
+        let selected = Translation{trans_id, translation};
+        let available: Vec<Translation> = row.get(3);
+        Passage{pass: chapter, translations: TransData{selected, available}}
     }
 
     fn key_prefix() ->  &'static str {
@@ -185,14 +235,22 @@ impl Cacheable for Chapter {
 }
 
 
-impl Cacheable for TorahPortion {
+impl Cacheable for Passage<TorahPortion> {
     fn query() ->  &'static str {
-        "SELECT torah_portion FROM torah_portion_struct WHERE portion_id = $1 AND trans_id = $2"
+        "SELECT torah_portion, t.trans_id, t.translation, available_trans
+        FROM torah_portion_struct tps
+        INNER JOIN translations t ON tps.trans_id = t.trans_id 
+        INNER JOIN translations_jz tjz ON tps.book_id = tjz.book_id 
+        WHERE tps.portion_id = $1 AND tps.trans_id = $2"
     }
 
     fn from_row(row: &Row) -> Self {
         let torah_portion: TorahPortion = row.get(0);
-        torah_portion 
+        let trans_id: i16 = row.get(1);
+        let translation: String = row.get(2);
+        let selected = Translation{trans_id, translation};
+        let available: Vec<Translation> = row.get(3);
+        Passage{pass: torah_portion, translations: TransData{selected, available}} 
     }
   
     fn key_prefix() ->  &'static str {
