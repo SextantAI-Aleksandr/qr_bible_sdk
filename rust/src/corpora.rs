@@ -47,7 +47,13 @@ pub struct Translation {
 /// The TransData struct captures both the selected translation as well as the available translations for a passage
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TransData {
+    /// The currently selected translation
     pub selected: Translation,
+    /// A footnote to display about the translation and associated license
+    pub footnote: String,
+    /// A url to more information about the translation
+    pub url: String,
+    /// A list of all available translations for the given passage
     pub available: Vec<Translation>
 }
 
@@ -181,7 +187,7 @@ impl<'a> tokio_postgres::types::FromSql<'a> for Translation {
 
 impl Cacheable for Passage<Verse> {
     fn query() ->  &'static str {
-        "SELECT vs.verse, t.trans_id, t.translation, available_trans
+        "SELECT vs.verse, t.trans_id, t.translation, t.footnote, t.url, tjz.available_trans
         FROM verse_struct vs 
         INNER JOIN translations t ON vs.trans_id = t.trans_id 
         INNER JOIN translations_jz tjz ON vs.book_id = tjz.book_id 
@@ -192,9 +198,11 @@ impl Cacheable for Passage<Verse> {
         let verse: Verse = row.get(0);
         let trans_id: i16 = row.get(1);
         let translation: String = row.get(2);
+        let footnote: String = row.get(3);
+        let url: String = row.get(4);
         let selected = Translation{trans_id, translation};
-        let available: Vec<Translation> = row.get(3);
-        Passage{pass: verse, translations: TransData{selected, available}}
+        let available: Vec<Translation> = row.get(5);
+        Passage{pass: verse, translations: TransData{selected, footnote, url, available}}
     }
 
     fn key_prefix() ->  &'static str {
@@ -209,7 +217,7 @@ impl Cacheable for Passage<Verse> {
 
 impl Cacheable for Passage<Chapter> {
     fn query() ->  &'static str {
-        "SELECT ch.chapter, t.trans_id, t.translation, available_trans
+        "SELECT ch.chapter, t.trans_id, t.translation, t.footnote, t.url, tjz.available_trans
         FROM chapter_struct ch 
         INNER JOIN translations t ON ch.trans_id = t.trans_id 
         INNER JOIN translations_jz tjz ON ch.book_id = tjz.book_id 
@@ -220,9 +228,11 @@ impl Cacheable for Passage<Chapter> {
         let chapter: Chapter = row.get(0);
         let trans_id: i16 = row.get(1);
         let translation: String = row.get(2);
+        let footnote: String = row.get(3);
+        let url: String = row.get(4);
         let selected = Translation{trans_id, translation};
-        let available: Vec<Translation> = row.get(3);
-        Passage{pass: chapter, translations: TransData{selected, available}}
+        let available: Vec<Translation> = row.get(5);
+        Passage{pass: chapter, translations: TransData{selected, footnote, url, available}}
     }
 
     fn key_prefix() ->  &'static str {
@@ -237,7 +247,7 @@ impl Cacheable for Passage<Chapter> {
 
 impl Cacheable for Passage<TorahPortion> {
     fn query() ->  &'static str {
-        "SELECT torah_portion, t.trans_id, t.translation, available_trans
+        "SELECT torah_portion, t.trans_id, t.translation, t.footnote, t.url, tjz.available_trans
         FROM torah_portion_struct tps
         INNER JOIN translations t ON tps.trans_id = t.trans_id 
         INNER JOIN translations_jz tjz ON tps.book_id = tjz.book_id 
@@ -248,9 +258,11 @@ impl Cacheable for Passage<TorahPortion> {
         let torah_portion: TorahPortion = row.get(0);
         let trans_id: i16 = row.get(1);
         let translation: String = row.get(2);
+        let footnote: String = row.get(3);
+        let url: String = row.get(4);
         let selected = Translation{trans_id, translation};
-        let available: Vec<Translation> = row.get(3);
-        Passage{pass: torah_portion, translations: TransData{selected, available}} 
+        let available: Vec<Translation> = row.get(5);
+        Passage{pass: torah_portion, translations: TransData{selected, footnote, url, available}} 
     }
   
     fn key_prefix() ->  &'static str {
