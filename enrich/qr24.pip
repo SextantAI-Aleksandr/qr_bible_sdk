@@ -3,4 +3,5 @@ python-Levenshtein==0.12.2
 fuzzywuzzy==0.18.0
 python-scriptures==3.0.0
 number-parser==0.3.2
-
+# added uwsgi June 2025 
+uwsgi
